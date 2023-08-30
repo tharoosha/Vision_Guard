@@ -70,10 +70,10 @@ no_sequences = 40
 
 DATA_PATH = "MP_DATA"  # Update this path accordingly
 
-action_list = np.array(["fall_floor","run","walk","shoot_gun","pullup","punch"])
+action_list = np.array(["fall_floor", "run", "walk", "shoot_gun", "pullup"])
 
 # Specify the list containing the names of the classes used for training.
-CLASSES_LIST = ["fall_floor","run","walk","shoot_gun","pullup","punch"]
+CLASSES_LIST = ["fall_floor", "run", "walk", "shoot_gun", "pullup"]
 # Create a label map
 label_map = {label: num for num, label in enumerate(CLASSES_LIST)}
 
@@ -97,7 +97,7 @@ print("y shape:", y.shape)
 
 # print(np.array(labels).shape)
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
 log_dir = os.path.join('Logs')
 tb_callback = TensorBoard(log_dir=log_dir)
@@ -115,23 +115,25 @@ model.compile(optimizer='Adam', loss='categorical_crossentropy',
               metrics=['categorical_accuracy'])
 
 
-
 # create an instance of early stopping callback
-early_stopping_callback = EarlyStopping(monitor='val_loss',patience=20, mode='min',restore_best_weights=True)
+early_stopping_callback = EarlyStopping(
+    monitor='val_loss', patience=20, mode='min', restore_best_weights=True)
 
 # compile the model and specify loss function, optimizer and metrics values to the model
-model.compile(loss='categorical_crossentropy',optimizer='Adam',metrics=["categorical_accuracy"])
+model.compile(loss='categorical_crossentropy', optimizer='Adam',
+              metrics=["categorical_accuracy"])
 
 # Start training the model
-lstm_model_training_history = model.fit(x = x_train,y = y_train,epochs=1000,batch_size=4,shuffle=True,validation_split=0.2,callbacks=[early_stopping_callback])
+lstm_model_training_history = model.fit(x=x_train, y=y_train, epochs=1000, batch_size=4,
+                                        shuffle=True, validation_split=0.2, callbacks=[early_stopping_callback])
 
 
 print(model.summary())
 
-model.save('action3.h5')
+model.save('action4.h5')
 
-yhat = model.predict(x_train)
-ytrue = np.argmax(y_train, axis=1).tolist()
+yhat = model.predict(x_test)
+ytrue = np.argmax(y_test, axis=1).tolist()
 yhat = np.argmax(yhat, axis=1).tolist()
 
 print(multilabel_confusion_matrix(ytrue, yhat))

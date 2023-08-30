@@ -16,10 +16,10 @@ no_sequences = 40
 
 DATA_PATH = "MP_DATA"  # Update this path accordingly
 
-action_list = np.array(["fall_floor","run","walk","shoot_gun","pullup","punch"])
+action_list = np.array(["fall_floor", "run", "walk", "shoot_gun", "pullup"])
 
 # Specify the list containing the names of the classes used for training.
-CLASSES_LIST = ["fall_floor","run","walk","shoot_gun","pullup","punch"]
+CLASSES_LIST = ["fall_floor", "run", "walk", "shoot_gun", "pullup"]
 
 
 def mediapipe_detection(image, model):
@@ -59,9 +59,9 @@ def extract_keypoints(result):
 
 
 # New detection variables
-model = load_model('action3.h5')  # Load the model from the saved file
+model = load_model('action4.h5')  # Load the model from the saved file
 
-colors = [(100, 0, 0),(0, 100, 0),(0, 0, 100),(200, 0, 0),(0, 200, 0),(0, 0, 200)]
+colors = [(100, 0, 0), (0, 100, 0), (0, 0, 100), (200, 0, 0), (0, 200, 0)]
 
 
 def prob_viz(res, actions, input_frame, colors):
@@ -77,7 +77,7 @@ def prob_viz(res, actions, input_frame, colors):
 # New detection variables
 sequence = []
 sentence = []
-threshold = 0.8
+threshold = 0.3
 
 cap = cv2.VideoCapture(0)
 # Set  mediapipe model
@@ -114,8 +114,8 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                     sentence.append(last)
             image = prob_viz(res, action_list, image, colors)
 
-        if len(sentence) > 2:
-            sentence = sentence[-2:]
+        if len(sentence) > 5:
+            sentence = sentence[-1:]
 
         cv2.rectangle(image, (0, 0), (640, 40), (245, 117, 16), -1)
         cv2.putText(image, ' '.join(sentence), (3, 30),

@@ -6,89 +6,98 @@ import numpy as np
 import moviepy
 
 # Specify the height and width each video frame will be resized in our dataset
-IMAGE_HEIGHT, IMAGE_WIDTH = 64,64
+IMAGE_HEIGHT, IMAGE_WIDTH = 64, 64
 
 # specify the list containing the names of the classes used for training.
-CLASSES_LIST = ["fall_floor","run","walk","shoot_gun","hit","pullup"]
+CLASSES_LIST = ["fall_floor", "run", "walk", "shoot_gun", "hit", "pullup"]
 
 # specify the number of frames of a video that will be fed to the model as one sequence
 SEQUENCE_LENGTH = 60
 
-convlstm_model = load_model('convlstm_model__Date_Time_2023_08_29__07_54_31__Loss_0.817366361618042__Accuracy_0.699999988079071.h5')
+convlstm_model = load_model(
+    'convlstm_model__Date_Time_2023_08_29__07_54_31__Loss_0.817366361618042__Accuracy_0.699999988079071.h5')
 
-def predict_on_video(video_file_path,output_file_path,SEQUENCE_LENGTH):
-  """
-  This function will perform action on a video using the LCRN model.
-  Args:
-    video_file_path: The path of the video stored in the disk on which the action recognition is to be performed
-    output_file_path: The path where the output video with the predicted action being performed overlayed will be stored
-    SEQUENCE_LENGTH: The fixed number of a video that can be passed to the model as one sequence
-  """
 
-  # Initialize the video capture object to read from the video
-  video_reader = cv2.VideoCapture(video_file_path)
+def predict_on_video(video_file_path, output_file_path, SEQUENCE_LENGTH):
+    """
+    This function will perform action on a video using the LCRN model.
+    Args:
+      video_file_path: The path of the video stored in the disk on which the action recognition is to be performed
+      output_file_path: The path where the output video with the predicted action being performed overlayed will be stored
+      SEQUENCE_LENGTH: The fixed number of a video that can be passed to the model as one sequence
+    """
 
-  # Get the width and height of the video
-  original_video_width = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
-  original_video_height = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    # Initialize the video capture object to read from the video
+    video_reader = cv2.VideoCapture(video_file_path)
 
-  # Initialize the videowriter object to store the output video in the disk
-  # Replace these placeholders with actual values
-  fourcc_code = cv2.VideoWriter_fourcc(*'MP4V')  # Replace 'YOUR_FOURCC' with the correct fourcc code
-  fps = video_reader.get(cv2.CAP_PROP_FPS)  # Replace with actual frame rate value
-  frame_size = (original_video_width, original_video_height)  # Replace with actual frame dimensions
+    # Get the width and height of the video
+    original_video_width = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
+    original_video_height = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-  video_writer = cv2.VideoWriter(output_file_path, fourcc_code, fps, frame_size)
+    # Initialize the videowriter object to store the output video in the disk
+    # Replace these placeholders with actual values
+    # Replace 'YOUR_FOURCC' with the correct fourcc code
+    fourcc_code = cv2.VideoWriter_fourcc(*'MP4V')
+    # Replace with actual frame rate value
+    fps = video_reader.get(cv2.CAP_PROP_FPS)
+    # Replace with actual frame dimensions
+    frame_size = (original_video_width, original_video_height)
 
-  # Declare a queue to store video frame
-  frames_queue = deque(maxlen = SEQUENCE_LENGTH)
+    video_writer = cv2.VideoWriter(
+        output_file_path, fourcc_code, fps, frame_size)
 
-  # Initialize a variable to store the predicted action being performed in the video
-  predicted_class_name = ''
+    # Declare a queue to store video frame
+    frames_queue = deque(maxlen=SEQUENCE_LENGTH)
 
-  # Iterate until the video is accessed successfully
-  while video_reader.isOpened():
+    # Initialize a variable to store the predicted action being performed in the video
+    predicted_class_name = ''
 
-    # Read the frame
-    ok, frame = video_reader.read()
+    # Iterate until the video is accessed successfully
+    while video_reader.isOpened():
 
-    # check if frame is not read properly then break the loop
-    if not ok:
-      break
+        # Read the frame
+        ok, frame = video_reader.read()
 
-    # Resize the Frame to fixed Dimension
-    resized_frame = cv2.resize(frame, (IMAGE_HEIGHT,IMAGE_WIDTH))
+        # check if frame is not read properly then break the loop
+        if not ok:
+            break
 
-    # Normalize the resized frame by dividing it with 255 so that each pixel value then lies between 0 and 1
-    normalized_frame = resized_frame/255
+        # Resize the Frame to fixed Dimension
+        resized_frame = cv2.resize(frame, (IMAGE_HEIGHT, IMAGE_WIDTH))
 
-    # Appending the pre-processed frame into the frames list
-    frames_queue.append(normalized_frame)
+        # Normalize the resized frame by dividing it with 255 so that each pixel value then lies between 0 and 1
+        normalized_frame = resized_frame/255
 
-    # Check if the number of frames in the queue are equal to the fixed sequence length
-    if len(frames_queue) == SEQUENCE_LENGTH:
+        # Appending the pre-processed frame into the frames list
+        frames_queue.append(normalized_frame)
 
-      # Pass the normalized frames to the model and get the predicted probabilities
-      predicted_labels_probabilities = convlstm_model.predict(np.expand_dims(frames_queue,axis=0))[0]
+        # Check if the number of frames in the queue are equal to the fixed sequence length
+        if len(frames_queue) == SEQUENCE_LENGTH:
 
-      # get the index of class with highest probalities
-      predicted_label = np.argmax(predicted_labels_probabilities)
+            # Pass the normalized frames to the model and get the predicted probabilities
+            predicted_labels_probabilities = convlstm_model.predict(
+                np.expand_dims(frames_queue, axis=0))[0]
 
-      # get the class name using the retrieve index
-      predicted_class_name = CLASSES_LIST[predicted_label]
+            # get the index of class with highest probalities
+            predicted_label = np.argmax(predicted_labels_probabilities)
 
-    # write predicted class name on top of the frame
-    cv2.putText(frame,predicted_class_name,(10,30),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
+            # get the class name using the retrieve index
+            predicted_class_name = CLASSES_LIST[predicted_label]
 
-    # write the frame into the disk using the videowriter object
-    video_writer.write(frame)
+        # write predicted class name on top of the frame
+        cv2.putText(frame, predicted_class_name, (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-  # release the VC and VW objects
-  video_reader.release()
-  video_writer.release()
+        # write the frame into the disk using the videowriter object
+        video_writer.write(frame)
+
+    # release the VC and VW objects
+    video_reader.release()
+    video_writer.release()
+
 
 test_video_directory = 'test_videos'
-os.makedirs(test_video_directory,exist_ok=True)
+os.makedirs(test_video_directory, exist_ok=True)
 video_title = 'test1'
 input_video_file_path = f'{test_video_directory}/{video_title}.mp4'
 
@@ -96,7 +105,9 @@ input_video_file_path = f'{test_video_directory}/{video_title}.mp4'
 output_video_file_path = f'{test_video_directory}/{video_title}=Output.SeqLen{SEQUENCE_LENGTH}.mp4'
 
 # Perform action recognition on the Test video
-predict_on_video(input_video_file_path,output_video_file_path,SEQUENCE_LENGTH)
+predict_on_video(input_video_file_path,
+                 output_video_file_path, SEQUENCE_LENGTH)
 
 # Display the output video
-VideoFileClip(output_video_file_path,audio=False,target_resolution=(300,None)).ipython_display()
+VideoFileClip(output_video_file_path, audio=False,
+              target_resolution=(300, None)).ipython_display()

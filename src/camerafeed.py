@@ -55,10 +55,10 @@ IMAGE_HEIGHT, IMAGE_WIDTH = 64, 64
 DATASET_DIR = "ACTION_DATA"
 
 # specify the list containing the names of the classes used for training.
-CLASSES_LIST = ["fall_floor","run","walk","shoot_gun","hit","pullup","punch"]
+CLASSES_LIST = ["fall_floor", "run", "walk", "shoot_gun", "pullup"]
 
 # Actions that we try to detect
-action_list = np.array(["fall_floor","run","walk","shoot_gun","hit","pullup","punch"])
+action_list = np.array(["fall_floor", "run", "walk", "shoot_gun", "pullup"])
 
 # specify the number of frames of a video that will be fed to the model as one sequence
 SEQUENCE_LENGTH = 60
@@ -86,19 +86,21 @@ for action in CLASSES_LIST:
             if count < no_sequences:
 
                 video_path = os.path.join(action_dir, video_filename)
-               
+
                 # Open the video file
                 cap = cv2.VideoCapture(video_path)
 
                 video_frames_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-                skip_frames_window = max(int(video_frames_count/SEQUENCE_LENGTH),1)
+                skip_frames_window = max(
+                    int(video_frames_count/SEQUENCE_LENGTH), 1)
 
                 if video_frames_count >= SEQUENCE_LENGTH:
                     # Initialize MediaPipe Holistic model
                     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
                         for frame_num in range(SEQUENCE_LENGTH):
                             # set the current frame position of the video
-                            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num*skip_frames_window)
+                            cap.set(cv2.CAP_PROP_POS_FRAMES,
+                                    frame_num*skip_frames_window)
 
                             # Read video frame
                             ret, frame = cap.read()
